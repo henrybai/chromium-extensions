@@ -1,1 +1,28 @@
-{	"version": "2.2",	"default_locale": "en",	"name": "__MSG_@@extension_name__",	"description": "__MSG_@@extension_description__",	"background_page": "background.html",		"icons":	{		"48": "images/icon48.png",		"128": "images/icon128.png"	},		"browser_action":	{		"default_icon": "images/icon32.png",    	"default_title": "__MSG_@@extension_name__"    	  	},	"content_scripts":	[		{			"run_at": "document_end",			"css": ["css/style.css"],			"matches": ["http://*/*", "https://*/*"],			"js": ["js/jquery-1.6.1.min.js", "js/jquery-ui-1.8.6.custom.min.js", "js/config.js", "js/connection.js", "js/settings.js", "js/content.js", "js/dropzones.js"]		},		{			"run_at": "document_end",			"matches": ["https://addons.mozilla.org/*/firefox/search-tools/*"],			"js": ["js/jquery-1.6.1.min.js", "js/connection.js", "mozilla/content.js"]		}	],		"permissions":	[		"tabs", "bookmarks", "chrome://favicon/", "http://releases.mozilla.org/*", "https://addons.mozilla.org/*"	]}
+{
+	"version": "2.2",
+	"default_locale": "en",
+	"name": "__MSG_@@extension_name__",
+	"description": "__MSG_@@extension_description__",
+
+	"background_page": "background.html",
+
+	"icons": {
+		"48": "images/icon48.png",
+		"128": "images/icon128.png"
+	},
+	"browser_action": {
+		"default_icon": "images/icon32.png",
+		"default_title": "__MSG_@@extension_name__"
+	},
+	"content_scripts": [{
+		"run_at": "document_end",
+		"css": ["css/style.css"],
+		"matches": ["http://*/*", "https://*/*"],
+		"js": ["js/jquery-1.6.1.min.js", "js/jquery-ui-1.8.6.custom.min.js", "js/config.js", "js/connection.js", "js/settings.js", "js/content.js", "js/dropzones.js"]}, {
+		"run_at": "document_end",
+		"matches": ["https://addons.mozilla.org/*/firefox/search-tools/*"],
+		"js": ["js/jquery-1.6.1.min.js", "js/connection.js", "mozilla/content.js"]}],
+	"permissions": [
+		"tabs", "bookmarks", "chrome://favicon/", "http://releases.mozilla.org/*", "https://addons.mozilla.org/*"
+	]
+}
