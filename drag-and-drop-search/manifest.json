@@ -27,7 +27,7 @@
 	}],
 
 	"permissions": [
-		"tabs", "bookmarks", "chrome://favicon/" 
+		"tabs"
 	],
 
 	"web_accessible_resources": [
@@ -37,9 +37,9 @@
 		"images/close.png",
 		"images/save.png",
 		"images/icon32.png"
-		
-
 	],
+
+	"minimum_chrome_version" : "20",
 
 	"incognito": "spanning"
 
