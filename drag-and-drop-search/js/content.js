@@ -1,56 +1,36 @@
 // include config.js
 // include dropzones.js
 
-var DEBUG = false;
-
-var DROPZONES_VERTICAL = 4;
-var DROPZONES_HORIZONTAL = 5;
-
-var DROPZONES_FADEIN_INTERVAL = 100;
-var DROPZONES_FADEOUT_INTERVAL = 100;
-
-function DROPZONE_WIDTH() { return Math.floor( ( window.innerWidth - ( DROPZONES_HORIZONTAL * 2 ) ) / DROPZONES_HORIZONTAL ); }
-function DROPZONE_HEIGHT() { return Math.floor( ( window.innerHeight - ( DROPZONES_VERTICAL * 2 ) ) / DROPZONES_VERTICAL ); }
-
-function DROPZONES_WIDTH_LEFTOVER() { return window.innerWidth - ( DROPZONE_WIDTH() *  DROPZONES_HORIZONTAL ) - ( DROPZONES_HORIZONTAL * 2 ); }
-function DROPZONES_HEIGHT_LEFTOVER() { return window.innerHeight - ( DROPZONE_HEIGHT() *  DROPZONES_VERTICAL ) - ( DROPZONES_VERTICAL * 2 ); }
-
-var DROPZONE_HEADER_HEIGHT = 26;
-var DROPZONE_CONTENT_OPACITY = 0.4;
-var DROPZONE_CONTENT_SELECTED_OPACITY = 0.9;
-function DROPZONE_CONTENT_HEIGHT() { return DROPZONE_HEIGHT() - DROPZONE_HEADER_HEIGHT; }
 
 // booleans for extension logic
 var OPTIONS = false;
 var DRAGGING = false;
 
-var SEARCH_TEXT;
+var SEARCH_OBJ;
 var DRAGSTART = { x: 0, y: 0 };
-var DRAG_TOLERANCE = 50;
-function DRAG_TOLERANCE_EXCEED( e )
+var DRAG_TOLERANCE = 40;
+function dragToleranceExceed( oldX, oldY, newX, newY, dragTolerance )
 {
-	return ( Math.sqrt( square( e.clientX - DRAGSTART.x ) + square( e.clientY - DRAGSTART.y) ) > DRAG_TOLERANCE );
+	return (Math.pow( newX - oldX, 2 ) + Math.pow( newY - oldY, 2) > Math.pow(dragTolerance, 2) );
 }
 
-function square( val ) { return ( val * val ); }
-
-function DRAG_PROCESS( e )
+function getDraggedObject( event )
 {
-	if ( window.getSelection().toString() != "" )
-	{
-		return { search: window.getSelection().toString() };
+	var draggedObj;
+	LOG(event);
+	
+	if ( event.srcElement.nodeName == "A" )	{	
+		draggedObj =  { search: event.srcElement.innerText, link: event.srcElement.href };
+	} else if ( window.getSelection().toString() != "" ) {
+		draggedObj =  { search: window.getSelection().toString() };
 	}
-	else if ( e.srcElement.nodeName == "IMG" )
-	{
-		return { search: e.srcElement.src, link: e.srcElement.src };
+	if (draggedObj) {
+		draggedObj.search = draggedObj.search.replace(/(\r\n|\n|\r)/gm," ").replace(/^\s+|\s+$/g,"");
+		if (getLink(draggedObj.search)) { draggedObj.link = getLink(draggedObj.search); }
+
+		LOG("dragged Object - " + JSON.stringify(draggedObj));
 	}
-	else if ( e.srcElement.parentNode.nodeName == "A" )
-	{
-		return { search: e.srcElement.data, link: e.srcElement.parentNode.href };
-	}
-	//console.log( e.srcElement );
-	//console.log( "window.getSelection().toString(): " + window.getSelection().toString() );
-	//console.log( e.srcElement.parentNode );
+	return draggedObj;
 }
 
 var DROPZONES_DATA;
@@ -65,14 +45,14 @@ client.registerHandlers({
 	"Options": function() {
 		if ( OPTIONS )
 		{
-			LOG( EXTENSION_NAME + " :: leaving options mode" );
+			LOG( "leaving options mode" );
 			OPTIONS = false;
 			DRAGGING = false;
 			DropZones.remove();
 		}
 		else
 		{
-			LOG( EXTENSION_NAME + " :: entering options mode" );
+			LOG( "entering options mode" );
 			OPTIONS = true;
 			DRAGGING = true;
 			DropZones.create( DROPZONES_DATA );
@@ -85,33 +65,52 @@ client.send( "Settings.get" );
 
 $( document ).bind
 ({
-	dragstart: function( e )
+	dragstart: function( event )
 	{
-		SEARCH_TEXT = DRAG_PROCESS( e );
-		DRAGSTART = { x: e.clientX, y: e.clientY };
+		SEARCH_OBJ = getDraggedObject( event );
+		DRAGSTART = { x: event.originalEvent.clientX , y: event.originalEvent.clientY };
 	},
 	
-	drag: function( e )
+	drag: function( event )
 	{
-		if ( !DRAGGING && DRAG_TOLERANCE_EXCEED( e ) )
+		if (SEARCH_OBJ && !DRAGGING && dragToleranceExceed( DRAGSTART.x, DRAGSTART.y, event.originalEvent.clientX, event.originalEvent.clientY, DRAG_TOLERANCE ))
 		{
 			DRAGGING = true;
-			LOG( EXTENSION_NAME + " :: create dropzones" );
+			LOG( "create dropzones" );
 			DropZones.create( DROPZONES_DATA );
-			LOG( EXTENSION_NAME + " :: show dropzones" );
+			LOG( "show dropzones" );
 			DropZones.show();
 		}
 	},
 
-	dragend: function( e )
+	dragend: function( event )
 	{
 		if( DRAGGING )
 		{
 			DRAGGING = false;
 			DropZones.remove();
-			LOG( EXTENSION_NAME + " :: hide dropzones" );
+			LOG( "remove dropzones" );
 		}
 	}
 
 });
+
+
+// Extract the link from the given text if any.
+// Otherwise return empty string.
+function getLink(text){
+	var re = /https?:\/\/([-\w\.]+)+(:\d+)?(\/([-\w\/_~\.,#%=\*:]*(\?\S+)?)?)?/;
+    var re2 = /\.[-\w\.]+(\/[\S]*)*/;
+	var link = "";
+	var matches = text.match(re);
+	if (matches) {
+		link = matches[0];
+	} else {
+		matches = text.match(re2);
+		if (matches) {
+			link = "http://" + matches[0];
+		}
+	}
+	return link;
+}
 

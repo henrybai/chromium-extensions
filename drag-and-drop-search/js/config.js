@@ -8,7 +8,7 @@ var EXTENSION_DESCRIPTION = chrome.i18n.getMessage( "@@extension_description" );
 var SEARCH_PATTERN = /({|%7B){2}(search|link)(%7D|}){2}/gi;
 
 var KEY = {
-	SHIFT: 16, CTRL: 17, ALT: 18
+	SHIFT: 16, CTRL: 17, ALT: 18, ENTER: 13
 };
 
 var DEFAULT_SETTINGS = {
@@ -49,6 +49,6 @@ var DEFAULT_SETTINGS = {
 
 function LOG( message ) {
 	if ( DEBUG ) {
-		console.log ( message );
+		console.log ( EXTENSION_NAME + " :: " + message );
 	}
 }

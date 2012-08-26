@@ -1,6 +1,5 @@
 //include config.js
 
-var DEBUG = false;
 
 var Client = function() {
 	var _port;

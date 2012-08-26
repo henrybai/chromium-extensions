@@ -1,3 +1,22 @@
+var DROPZONES_VERTICAL = 4;
+var DROPZONES_HORIZONTAL = 5;
+
+var DROPZONES_FADEIN_INTERVAL = 200;
+var DROPZONES_FADEOUT_INTERVAL = 200;
+
+function DROPZONE_WIDTH() { return Math.floor( ( window.innerWidth- ( DROPZONES_HORIZONTAL * 2 ) ) / DROPZONES_HORIZONTAL ); }
+function DROPZONE_HEIGHT() { return Math.floor( ( window.innerHeight - ( DROPZONES_VERTICAL * 2 ) ) / DROPZONES_VERTICAL ); }
+
+function DROPZONES_WIDTH_LEFTOVER() { return window.innerWidth - ( DROPZONE_WIDTH() *  DROPZONES_HORIZONTAL ) - ( DROPZONES_HORIZONTAL * 2 ); }
+function DROPZONES_HEIGHT_LEFTOVER() { return window.innerHeight - ( DROPZONE_HEIGHT() *  DROPZONES_VERTICAL ) - ( DROPZONES_VERTICAL * 2 ); }
+
+var DROPZONE_HEADER_HEIGHT = 26;
+var DROPZONE_CONTENT_OPACITY = 0.4;
+var DROPZONE_CONTENT_SELECTED_OPACITY = 0.9;
+function DROPZONE_CONTENT_HEIGHT() { return DROPZONE_HEIGHT() - DROPZONE_HEADER_HEIGHT; }
+
+
+
 var DROPZONE_HEADER = function( name, favicon )
 {
 	return $( '<div></div>' ).addClass( "dropzone_header" )
@@ -15,31 +34,39 @@ var DROPZONE_ZONE = function()
 {
 	return $( '<li></li>' ).addClass( "ui-state-default" )
 						   .bind({
+						   		dragenter : function ( e ) {
+						   			e.preventDefault();
+						   			$( this ).children( ".dropzone_content" ).css( "opacity", DROPZONE_CONTENT_SELECTED_OPACITY );
+						   		},
 								dragover: function( e )
-								{
-									$( this ).children( ".dropzone_content" ).css( "opacity", DROPZONE_CONTENT_SELECTED_OPACITY );
-									return false;
+								{	
+								    e.preventDefault(); // Necessary. Allows us to drop.
+								//	e.originalEvent.dataTransfer.dropEffect = "link";  //set drop image
 								},
 								dragleave: function( e )
 								{
 									$( this ).children( ".dropzone_content" ).css( "opacity", DROPZONE_CONTENT_OPACITY );
-									return false;
 								},
+
 								drop: function( e )
 								{
-									var url = DROPZONES_DATA.zones[ $( this ).attr( "id" ) ][ "url" ];
+									e.preventDefault();
+								    e.stopPropagation(); // stops the browser from redirecting.
+							
+									var url = DROPZONES_DATA.zones[ $( this ).attr( "dd_zone_id" ) ][ "url" ];
 									var data = unescape( url.match( SEARCH_PATTERN )[0] );
 
 									if ( data == "{{search}}" )
 									{
-										data = SEARCH_TEXT.search;
+										data = SEARCH_OBJ.search;
 									}
 									else if ( data == "{{link}}" )
 									{
-										data = SEARCH_TEXT.link;
+										data = SEARCH_OBJ.link;
 									}
 									client.send( "Tabs.create", { url: url.replace( SEARCH_PATTERN, data ) } );
 									$( this ).children( ".dropzone_content" ).css( "opacity", DROPZONE_CONTENT_SELECTED_OPACITY );
+									
 									return false;
 								}
 						   });
@@ -80,12 +107,12 @@ var DROPZONE_OPTIONS_HEADER = function( name, favicon )
 										 
 											// edit name of zone
 											 dropzone_header.children( "span" )
-															.replaceWith( '<input type="text" name="id" value="' + DROPZONES_DATA.zones[ dropzone.attr( "id" ) ][ "name" ] + '"/>' );
+															.replaceWith( '<input type="text" name="id" value="' + DROPZONES_DATA.zones[ dropzone.attr( "dd_zone_id" ) ][ "name" ] + '"/>' );
 															
 											 dropzone_header.find( "input[name='id']" )
 																.keypress( function( e )
 																{
-																	if (event.keyCode == '13')
+																	if (event.keyCode == KEY.ENTER)
 																	{
 																		// click the save button
 																		save_edit_button.trigger( 'click' );
@@ -97,10 +124,10 @@ var DROPZONE_OPTIONS_HEADER = function( name, favicon )
 											 dropzone_content.children( "div" )
 															 .css( "visibility", "visible" )
 															 .find( "input[name='favicon']" )
-																.attr( "value", DROPZONES_DATA.zones[ dropzone.attr( "id" ) ][ "favicon" ] )
+																.attr( "value", DROPZONES_DATA.zones[ dropzone.attr( "dd_zone_id" ) ][ "favicon" ] )
 															 .end()
 															 .find( "input[name='url']" )
-																.attr( "value", DROPZONES_DATA.zones[ dropzone.attr( "id" ) ][ "url" ] )
+																.attr( "value", DROPZONES_DATA.zones[ dropzone.attr( "dd_zone_id" ) ][ "url" ] )
 															 .end();
 											 
 											 
@@ -117,7 +144,7 @@ var DROPZONE_OPTIONS_HEADER = function( name, favicon )
 											 dropzone_header.children( "img" ).attr( "src", favicon );
 											 dropzone_header.children( "input" ).replaceWith( '<span>' + name + '</span>' );
 											 dropzone_content.children( "div" ).css( "visibility", "hidden" );
-											 client.send( "Zones.set", { index: dropzone.attr( "id" ), name: name, url: url, favicon: favicon } );
+											 client.send( "Zones.set", { index: dropzone.attr( "dd_zone_id" ), name: name, url: url, favicon: favicon } );
 										 }
 									 })
 								 .end()
@@ -126,9 +153,9 @@ var DROPZONE_OPTIONS_HEADER = function( name, favicon )
 									 .click( function( e )
 									 {
 										 var dropzone = $( this ).closest( ".ui-state-default" );
-										 client.send( "Zones.remove", { index: dropzone.attr( "id" ) } );
+										 client.send( "Zones.remove", { index: dropzone.attr( "dd_zone_id" ) } );
 										 
-										 var _zone = ( new DROPZONE_OPTIONS_EMPTY_ZONE( dropzone.attr( "id" ) ) ).width( DROPZONE_WIDTH() )
+										 var _zone = ( new DROPZONE_OPTIONS_EMPTY_ZONE( dropzone.attr( "dd_zone_id" ) ) ).width( DROPZONE_WIDTH() )
 																												 .height( DROPZONE_HEIGHT() );
 										 dropzone.replaceWith( _zone );
 									 })
@@ -140,7 +167,7 @@ var DROPZONE_OPTIONS_CONTENT = function( height )
 {
 	return $( '<div></div>' ).addClass( "dropzone_content" )
 							 .height( height )
-							 .append( '<div id="haha" style="visibility: hidden;"></div>' )
+							 .append( '<div style="visibility: hidden;"></div>' )
 							 .find( "div" )
 								.append( '<label>Icon:</label><br /><input type="text" name="favicon" /><br />' )
 								.append( '<label>URL:</label><br /><input type="text" name="url" />' )
@@ -150,7 +177,7 @@ var DROPZONE_OPTIONS_CONTENT = function( height )
 var DROPZONE_OPTIONS_EMPTY_ZONE = function( id )
 {
 	return $( '<li></li>' ).attr( "class" , "ui-state-disabled" )
-						   .attr( "id", id )
+						   .attr( "dd_zone_id", id )
 						   .append( '<img title="add" style="float: right; padding: 5px;" src="' + EXTENSION_URL + 'images/add.png" />' )
 						   .bind({
 								dragstart: function( e )
@@ -180,7 +207,7 @@ var DropZone = function( id, name, url, favicon )
 	{
 		if ( OPTIONS )
 		{
-			return ( new DROPZONE_OPTIONS_ZONE ).attr( "id", id )
+			return ( new DROPZONE_OPTIONS_ZONE ).attr( "dd_zone_id", id )
 												.width( DROPZONE_WIDTH() )
 												.height( DROPZONE_HEIGHT() )
 												.append( new DROPZONE_OPTIONS_HEADER( name, favicon ) )
@@ -189,7 +216,7 @@ var DropZone = function( id, name, url, favicon )
 		else
 		{
 			// add leftover space to first row and column to hide whitespace - can't do this in options mode because of dragging
-			return ( new DROPZONE_ZONE ).attr( "id", id )
+			return ( new DROPZONE_ZONE ).attr( "dd_zone_id", id )
 										.width( DROPZONE_WIDTH() + ( ( id % DROPZONES_HORIZONTAL == 0 ) ? DROPZONES_WIDTH_LEFTOVER() : 0 ) )
 										.height( DROPZONE_HEIGHT() + ( ( id < DROPZONES_HORIZONTAL ) ? DROPZONES_HEIGHT_LEFTOVER() : 0 ) )
 										.append( new DROPZONE_HEADER( name, favicon ) )
@@ -206,7 +233,7 @@ var DropZone = function( id, name, url, favicon )
 		else
 		{
 			// add leftover space to first row and column to hide whitespace - can't do this in options mode because of dragging
-			return ( new DROPZONE_EMPTY_ZONE ).attr( "id", id )
+			return ( new DROPZONE_EMPTY_ZONE ).attr( "dd_zone_id", id )
 											  .width( DROPZONE_WIDTH() + ( ( id % DROPZONES_HORIZONTAL == 0 ) ? DROPZONES_WIDTH_LEFTOVER() : 0 ) )
 											  .height( DROPZONE_HEIGHT() + ( ( id < DROPZONES_HORIZONTAL ) ? DROPZONES_HEIGHT_LEFTOVER() : 0 ) );
 		}
@@ -215,36 +242,44 @@ var DropZone = function( id, name, url, favicon )
 
 var DropZones = new function()
 {
+
 	this.create = function( data )
 	{
-		$( document.body ).prepend( '<ul id="dropzones"' + ( ( OPTIONS ) ? ' style="background-color: white; height: 100%;"' : "" ) + '></ul>' );
-		
-		$.each( DROPZONES_DATA.zones, function( index, zone )
-		{
-			var _dropzone = new DropZone( index, zone[ "name" ], zone[ "url" ], zone[ "favicon" ] );
-			_dropzone.appendTo( "#dropzones" );
-		});
-		
-		$( function() {
-			$("#dropzones").sortable({
-				cancel: '.ui-state-disabled',
-				containment: 'parent',
-				tolerance: 'pointer',
-				items: '.ui-state-default',
-				update: function( event, ui )
-				{
-					// new sequence of ids
-					var seq = new Array();
-					$( "#dropzones > li" ).each( function( index )
-					{
-						seq.push( $( this ).attr( "id" ) );
-						$( this ).attr( "id", index );
-					});
-					client.send( "Zones.rearrange", { sequence: seq } );
-				}
+		if (data) {
+			var dropZoneHolder = $( '<ul id="dropzones"' + 
+				( ( OPTIONS ) ? ' style="background-color: white; height: 100%;"'  :  "" ) + '></ul>' );
+			
+			$.each( DROPZONES_DATA.zones, function( index, zone )
+			{
+				var _dropzone = new DropZone( index, zone[ "name" ], zone[ "url" ], zone[ "favicon" ] );
+				_dropzone.appendTo( dropZoneHolder );
 			});
-			$("#dropzones").disableSelection();
-		});
+
+			$( document.body ).prepend(dropZoneHolder);
+			
+			$( function() {
+				$("#dropzones").sortable({
+					cancel: '.ui-state-disabled',
+					containment: 'parent',
+					tolerance: 'pointer',
+					items: '.ui-state-default',
+					update: function( event, ui )
+					{
+						// new sequence of ids
+						var seq = new Array();
+						$( "#dropzones > li" ).each( function( index )
+						{
+							seq.push( $( this ).attr( "dd_zone_id" ) );
+							$( this ).attr( "dd_zone_id", index );
+						});
+						client.send( "Zones.rearrange", { sequence: seq } );
+					}
+				});
+				$("#dropzones").disableSelection();
+			});
+		} else {
+			LOG("ERROR! Empty Zone Data!");
+		}
 	};
 	
 	this.show = function()
@@ -265,23 +300,28 @@ var DropZones = new function()
 
 var ScrollBar = new function()
 {
-	var _overflow = "";
+	var _overflowBody = "";
+	var _overflowHTML = "";
 
 	this.hide = function()
 	{
-		if ( _overflow == "" )
+		if ( _overflowBody == "" && _overflowHTML == "")
 		{
-			_overflow = $( document.body ).css( "overflow" );
+			_overflowBody = $( document.body ).css( "overflow" );
+			_overflowHTML = $(  "html" ).css( "overflow" );
 			$( document.body ).css( "overflow", "hidden" );
+			$( "html" ).css( "overflow", "hidden" );
 		}
 	};
 	
 	this.restore = function()
 	{
-		if ( _overflow != "" )
+		if ( _overflowBody != "" || _overflowHTML != "")
 		{
-			$( document.body ).css( "overflow", _overflow );
-			_overflow = "";
+			$( document.body ).css( "overflow", _overflowBody );
+			$(  "html" ).css( "overflow", _overflowHTML );
+			_overflowBody = "";
+			_overflowHTML = "";
 		}
 	};
 };
