@@ -34,14 +34,11 @@ var DROPZONE_ZONE = function()
 {
 	return $( '<li></li>' ).addClass( "ui-state-default" )
 						   .bind({
-						   		dragenter : function ( e ) {
-						   			e.preventDefault();
-						   			$( this ).children( ".dropzone_content" ).css( "opacity", DROPZONE_CONTENT_SELECTED_OPACITY );
-						   		},
-								dragover: function( e )
+						   		dragover: function( e )
 								{	
 								    e.preventDefault(); // Necessary. Allows us to drop.
-								//	e.originalEvent.dataTransfer.dropEffect = "link";  //set drop image
+									$( this ).children( ".dropzone_content" ).css( "opacity", DROPZONE_CONTENT_SELECTED_OPACITY );
+						   		//	e.originalEvent.dataTransfer.dropEffect = "link";  //set drop image
 								},
 								dragleave: function( e )
 								{

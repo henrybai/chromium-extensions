@@ -105,7 +105,6 @@ var Server = function( name ) {
 	{
 		var message = ( parameters != null ) ? parameters : new Object();
 		message[ "command" ] = command;
-
 		if ( Id.postMessage )
 		{
 			Id.postMessage( message );
@@ -124,7 +123,7 @@ var Server = function( name ) {
 	{
 		if ( port.name == _name )
 		{
-			_clients[ port.tab.id ] = port;
+			_clients[ port.sender.tab.id ] = port;
 			
 			port.onMessage.addListener( function( message )
 			{
@@ -133,7 +132,7 @@ var Server = function( name ) {
 			
 			port.onDisconnect.addListener( function()
 			{
-				delete _clients[ port.tab.id ];
+				delete _clients[ port.sender.tab.id ];
 			});
 		}
 	});

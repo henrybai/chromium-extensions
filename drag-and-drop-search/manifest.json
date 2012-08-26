@@ -1,7 +1,7 @@
 {
 	"name": "__MSG_@@extension_name__",
 	"version": "2.2",
-	"manifest_version": 1,
+	"manifest_version": 2,
 
 	"description": "__MSG_@@extension_description__",
 	"icons": {
@@ -15,19 +15,20 @@
 			"default_title": "__MSG_@@extension_name__"
 		},
 	
-	"background_page": "background.html",
+	"background": {"scripts": ["js/jquery-1.8.0.min.js", "js/config.js", 
+					"js/storage.js", "js/settings.js", "js/connection.js", "background.js"]
+	},
 	
 	"content_scripts": [{
 		"run_at": "document_end",
 		"css": ["css/style.css"],
 		"matches": ["http://*/*", "https://*/*"],
-		"js": ["js/jquery-1.8.0.min.js", "js/jquery-ui-1.8.23.custom.min.js", "js/config.js", "js/connection.js", "js/settings.js", "js/content.js", "js/dropzones.js"]}, {
-		"run_at": "document_end",
-		"matches": ["https://addons.mozilla.org/*/firefox/search-tools/*"],
-		"js": ["js/jquery-1.8.0.min.js", "js/connection.js", "mozilla/content.js"]}],
-		"permissions": [
-			"tabs", "bookmarks", "chrome://favicon/", "http://releases.mozilla.org/*", "https://addons.mozilla.org/*"
-		],
+		"js": ["js/jquery-1.8.0.min.js", "js/jquery-ui-1.8.23.custom.min.js", "js/config.js", "js/connection.js", "js/settings.js", "js/content.js", "js/dropzones.js"]
+	}],
+
+	"permissions": [
+		"tabs", "bookmarks", "chrome://favicon/" 
+	],
 
 	"web_accessible_resources": [
 		"images/icon16.png",

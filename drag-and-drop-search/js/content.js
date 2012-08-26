@@ -37,6 +37,7 @@ var DROPZONES_DATA;
 
 var client = new Client();
 client.connect( "background" );
+
 client.registerHandlers({
 	"Settings.get": function( parameters ) {
 		DROPZONES_DATA = parameters.data;
